@@ -7,11 +7,10 @@ import cloudpickle
 import logging
 import warnings
 
-# Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Completely silence LightGBM warnings (all categories, all messages)
-warnings.filterwarnings('ignore', module='lightgbm')
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%H:%M:%S')
+
 
 # Configuration
 DATA_VERSION = "v5.0"
@@ -64,9 +63,10 @@ model = lgb.LGBMRegressor(
     learning_rate=0.01,
     max_depth=5,
     num_leaves=2**5-1,
-    colsample_bytree=0.1
+    colsample_bytree=0.1,
+    verbosity=-1
 )
-logging.info(f"Defined model parameters for data version: {DATA_VERSION}, feature set size: {FEATURE_SET_SIZE}, model parameters: n_estimators=2000, learning_rate=0.01, max_depth=5, num_leaves=2**5-1, colsample_bytree=0.1.")
+logging.info(f"Defined model parameters for data version: {DATA_VERSION}, feature set size: {FEATURE_SET_SIZE}, model parameters: n_estimators=2000, learning_rate=0.01, max_depth=5, num_leaves=2**5-1, colsample_bytree=0.1, verbosity=-1.")
 
 # Train model with warnings completely disabled
 with warnings.catch_warnings():
@@ -120,10 +120,10 @@ validation["meta_model"] = pd.read_parquet(
 logging.info("Downloaded and joined meta_model for validation.")
 
 # Calculate performance metrics
-per_era_corr = validation.groupby("era", include_groups=False).apply(
+per_era_corr = validation.groupby("era").apply(
     lambda x: numerai_corr(x[["prediction"]].dropna(), x["target"].dropna())
 )
-per_era_mmc = validation.dropna().groupby("era", include_groups=False).apply(
+per_era_mmc = validation.dropna().groupby("era").apply(
     lambda x: correlation_contribution(x[["prediction"]], x["meta_model"], x["target"])
 )
 logging.info("Calculated performance metrics.")

@@ -162,13 +162,11 @@ logging.info("Downloaded and processed live data.")
 
 # Define prediction pipeline function
 def predict(live_features: pd.DataFrame) -> pd.DataFrame:
-    logging.info("Making inference on provided features.")
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        live_predictions = model.predict(live_features[feature_set])
+    live_predictions = model.predict(live_features[feature_set])
     submission = pd.Series(live_predictions, index=live_features.index)
     return submission.to_frame("prediction")
-logging.info("Defined prediction pipeline function.")
+
+# live_features: pd.DataFrame是一个类型提示语法 (type hint) 
 
 # Serialize prediction function
 p = cloudpickle.dumps(predict)
